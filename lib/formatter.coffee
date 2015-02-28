@@ -362,50 +362,6 @@ class Formatter
     @current_width = process.stdout.columns
     @current_height = process.stdout.rows
 
-  # _wx:(w,x)=>
-  #   if not x? and typeof w is 'string'
-  #     x = w
-  #     w = null
-  #   w = @_get_width(w)
-  #   return [w,x]
-
 f = new Formatter()
 
 exports.Formatter = Formatter
-
-# # text = "When using the RegExp constructor: for each backslash in your regular expression, you have to type \\ in the RegExp constructor. (In JavaScript strings, \\ represents a single backslash!) For example, the following regular expressions match all leading and trailing whitespaces (\s); note that \\s is passed as part of the first argument of the RegExp constructor"
-# text = """
-# To scan the lines of his face, or feel the bumps on the head of this Leviathan; this is a thing which no Physiognomist or Phrenologist has as yet undertaken. Such an enterprise would seem almost as hopeful as for Lavater to have scrutinized the wrinkles on the Rock of Gibraltar, or for Gall to have mounted a ladder and manipulated the Dome of the Pantheon. Still, in that famous work of his, Lavater not only treats of the various faces of men, but also attentively studies the faces of horses, birds, serpents, and fish; and dwells in detail upon the modifications of expression discernible therein. Nor have Gall and his disciple Spurzheim failed to throw out some hints touching the phrenological characteristics of other beings than man. Therefore, though I am but ill qualified for a pioneer, in the application of these two semi-sciences to the whale, I will do my endeavor. I try all things; I achieve what I can.
-
-# Physiognomically regarded, the Sperm Whale is an anomalous creature. He has no proper nose. And since the nose is the central and most conspicuous of the features; and since it perhaps most modifies and finally controls their combined expression; hence it would seem that its entire absence, as an external appendage, must very largely affect the countenance of the whale. For as in landscape gardening, a spire, cupola, monument, or tower of some sort, is deemed almost indispensable to the completion of the scene; so no face can be physiognomically in keeping without the elevated open-work belfry of the nose. Dash the nose from Phidias's marble Jove, and what a sorry remainder! Nevertheless, Leviathan is of so mighty a magnitude, all his proportions are so stately, that the same deficiency which in the sculptured Jove were hideous, in him is no blemish at all. Nay, it is an added grandeur. A nose to the whale would have been impertinent. As on your physiognomical voyage you sail round his vast head in your jolly-boat, your noble conceptions of him are never insulted by the reflection that he has a nose to be pulled. A pestilent conceit, which so often will insist upon obtruding even when beholding the mightiest royal beadle on his throne.
-
-# In some particulars, perhaps the most imposing physiognomical view to be had of the Sperm Whale, is that of the full front of his head. This aspect is sublime.
-# """
-
-# console.log(f.warning("Lorem Ipsum"))
-# console.log(f.hr('='))
-# console.log f.underline(f.left(null,f.wrap(text),false))
-# console.log(f.hr('='))
-# console.log f.underline((f.wrap(text)))
-# console.log(f.HR())
-# console.log f.truncate(text)
-# console.log(f.HR())
-# console.log(f.ts("Time stamped"))
-# console.log(f.center(null,"Center",true))
-# console.log(f.right(null,"Right",true))
-# console.log(f.bgRed(f.left("Left",true)))
-# console.log "BANNER"
-# console.log(f.BANNER(text))
-# console.log(f.BANNER("Lorem Ipsum"))
-# console.log "banner"
-# console.log(f.banner("Lorem Ipsum"))
-# console.log(f.hr('.'))
-# console.log "TITLE"
-# console.log(f.TITLE("Lorem Ipsum"))
-# console.log "title"
-# console.log(f.title("Lorem Ipsum"))
-# console.log(f.hr('.'))
-# console.log(f.hr('.'))
-# console.log(f.error("Lorem Ipsum"))
-# console.log(f.hr('~'))
-# console.log(f.note("Lorem Ipsum"))
