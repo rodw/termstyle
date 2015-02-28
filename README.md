@@ -64,7 +64,6 @@ The source code and documentation for TermStyle is available on GitHub at [rodw/
 git clone git@github.com:rodw/termstyle.git
 ```
 
-<!--
 TermStyle is deployed as an [npm module](https://npmjs.org/) under the name [`termstyle`](https://npmjs.org/package/termstyle). Hence you can install a pre-packaged version with the command:
 
 ```console
@@ -78,7 +77,6 @@ and you can add it to your project as a dependency by adding a line like:
 ```
 
 to the `dependencies` or `devDependencies` part of your `package.json` file.
--->
 
 ## Licensing
 
