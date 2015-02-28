@@ -1,6 +1,6 @@
 {
   "name"         : "termstyle",
-  "version"      : "0.1.0",
+  "version"      : "0.1.1",
   "description"  : "Declarative styles for the console",
   "repository"   : { "type": "git", "url": "https://github.com/rodw/termstyle.git" },
   "bugs"         : "https://github.com/rodw/termstyle/issues",
