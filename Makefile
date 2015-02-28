@@ -21,7 +21,6 @@ NPM_ARGS ?= --silent
 # PACKAGING ####################################################################
 PACKAGE_VERSION ?= $(shell $(NODE_EXE) -e "console.log(require('./$(PACKAGE_JSON)').version)")
 PACKAGE_NAME ?= $(shell $(NODE_EXE) -e "console.log(require('./$(PACKAGE_JSON)').name)")
-TMP_PACKAGE_DIR ?= packaging-$(PACKAGE_NAME)-$(PACKAGE_VERSION)-tmp
 PACKAGE_DIR ?= $(PACKAGE_NAME)-$(PACKAGE_VERSION)
 
 # MOCHA ########################################################################
@@ -42,13 +41,13 @@ COVERAGE_ARGS ?= -e migration --initfile $(LIB_COV)/coffee-coverage-init.js
 MOCHA_COV_ARGS  ?= --require $(LIB_COV)/coffee-coverage-init.js --globals "_\$$jscoverage" --compilers coffee:coffee-script/register -R html-cov -t 20000
 
 # MARKDOWN #####################################################################
-MARKDOWN_SRCS ?= $(shell find . -type f -name '*.md' | grep -v node_modules)
-MARKDOWN_HTML ?= ${MARKDOWN_SRCS:.md=.html}
-MARKDOWN_PROCESSOR ?= pandoc
-MARKDOWN_STYLESHEET ?= docs/styles/markdown.css
-MARKDOWN_PROCESSOR_ARGS ?= -f markdown -t html -s -H $(MARKDOWN_STYLESHEET) --toc --highlight-style pygments
-LITCOFFEE_SRCS ?= $(shell find . -type f -name '*.litcoffee' | grep -v node_modules)
-LITCOFFEE_HTML ?= ${LITCOFFEE_SRCS:.litcoffee=.html}
+# MARKDOWN_SRCS ?= $(shell find . -type f -name '*.md' | grep -v node_modules)
+# MARKDOWN_HTML ?= ${MARKDOWN_SRCS:.md=.html}
+# MARKDOWN_PROCESSOR ?= pandoc
+# MARKDOWN_STYLESHEET ?= docs/styles/markdown.css
+# MARKDOWN_PROCESSOR_ARGS ?= -f markdown -t html -s -H $(MARKDOWN_STYLESHEET) --toc --highlight-style pygments
+# LITCOFFEE_SRCS ?= $(shell find . -type f -name '*.litcoffee' | grep -v node_modules)
+# LITCOFFEE_HTML ?= ${LITCOFFEE_SRCS:.litcoffee=.html}
 
 # OTHER ########################################################################
 RM_DASH_I ?= -f
@@ -114,18 +113,18 @@ clean-markdown:
 ################################################################################
 # NPM TARGETS
 
-module: js test docs coverage
+module: js test coverage
 	mkdir -p $(MODULE_DIR)
 	cp -r lib $(MODULE_DIR)
-	cp -r test $(MODULE_DIR)
-	cp -r docs $(MODULE_DIR)
 	cp $(PACKAGE_JSON) $(MODULE_DIR)
 	cp README.md $(MODULE_DIR)
 	cp Makefile $(MODULE_DIR)
 	cp *.txt $(MODULE_DIR)
+	mv module $(PACKAGE_DIR)
+	tar -czf $(PACKAGE_DIR).tgz $(PACKAGE_DIR)
 
-test-module-install: clean-test-module-install js test docs coverage module
-	mkdir ../testing-module-install; cd ../testing-module-install; npm install "$(CURDIR)/module"; node -e "require('assert').ok(require('stew-select').Stew);require('assert').ok(require('stew-select').DOMUtil)" && cd $(CURDIR) && rm -r $(RM_DASH_I) ../testing-module-install && echo "It worked!"
+test-module-install: clean-test-module-install module
+	mkdir ../testing-module-install; cd ../testing-module-install; npm install "$(CURDIR)/$(PACKAGE_DIR).tgz"; node -e "require('assert').ok(require('termstyle').Formatter)" && cd $(CURDIR) && rm -r $(RM_DASH_I) ../testing-module-install && echo "It worked!"
 
 $(NODE_MODULES): $(PACKAGE_JSON)
 	$(NPM_EXE) $(NPM_ARGS) prune
@@ -171,25 +170,25 @@ coverage: $(COFFEE_SRCS) $(COFFEE_TEST_SRCS) $(MOCHA_TESTS) $(NODE_MODULES)
 ################################################################################
 # MARKDOWN & OTHER DOC TARGETS
 
-docs: markdown docco
+# docs: markdown docco
 
-.SUFFIXES: .html .md
-.md.html:
-	$(MARKDOWN_PROCESSOR) $(MARKDOWN_PROCESSOR_ARGS) -o $@ $<
-$(MARKDOWN_HTML_OBJ): $(MARKDOWN_SRCS)
+# .SUFFIXES: .html .md
+# .md.html:
+# 	$(MARKDOWN_PROCESSOR) $(MARKDOWN_PROCESSOR_ARGS) -o $@ $<
+# $(MARKDOWN_HTML_OBJ): $(MARKDOWN_SRCS)
 
-.SUFFIXES: .html .litcoffee
-.litcoffee.html:
-	$(MARKDOWN_PROCESSOR) $(MARKDOWN_PROCESSOR_ARGS) -o $@ $<
-$(LITCOFFEE_HTML_OBJ): $(LITCOFFEE_SRCS)
+# .SUFFIXES: .html .litcoffee
+# .litcoffee.html:
+# 	$(MARKDOWN_PROCESSOR) $(MARKDOWN_PROCESSOR_ARGS) -o $@ $<
+# $(LITCOFFEE_HTML_OBJ): $(LITCOFFEE_SRCS)
 
-markdown: $(MARKDOWN_HTML) $(LITCOFFEE_HTML)
-html: markdown
+# markdown: $(MARKDOWN_HTML) $(LITCOFFEE_HTML)
+# html: markdown
 
-docco: $(COFFEE_SRCS) $(NODE_MODULES)
-	rm -r $(RM_DASH_I) docs/docco
-	mkdir -p docs
-	mv docs docs-temporarily-renamed-so-docco-doesnt-clobber-it
-	docco $(COFFEE_SRCS)
-	mv docs docs-temporarily-renamed-so-docco-doesnt-clobber-it/docco
-	mv docs-temporarily-renamed-so-docco-doesnt-clobber-it docs
+# docco: $(COFFEE_SRCS) $(NODE_MODULES)
+# 	rm -r $(RM_DASH_I) docs/docco
+# 	mkdir -p docs
+# 	mv docs docs-temporarily-renamed-so-docco-doesnt-clobber-it
+# 	docco $(COFFEE_SRCS)
+# 	mv docs docs-temporarily-renamed-so-docco-doesnt-clobber-it/docco
+# 	mv docs-temporarily-renamed-so-docco-doesnt-clobber-it docs

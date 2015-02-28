@@ -1,9 +1,12 @@
 {
   "name"         : "termstyle",
-  "version"      : "0.0.1",
-  "description"  : "...tk...",
+  "version"      : "0.1.0",
+  "description"  : "Declarative styles for the console",
+  "repository"   : { "type": "git", "url": "https://github.com/rodw/termstyle.git" },
+  "bugs"         : "https://github.com/rodw/termstyle/issues",
+  "license"      : "MIT",
   "author"       : "Rod Waldhoff <http://heyrod.com/>",
-  "Contributors" : [ ],
+  "contributors" : [ ],
   "dependencies": {
     "chalk"     : "latest"
   },
@@ -12,5 +15,8 @@
     "mocha"             : "latest",
     "should"            : "latest",
     "coffee-coverage"   : "latest"
-  }
+  },
+  "main"         : "lib/formatter.js",
+  "engines"      : { "node": ">=0.10"  },
+  "keywords"     : [ "css", "terminal", "console", "chalk", "formatting", "style", "styling", "text", "tui", "wrapping", "string", "color" ]
 }
