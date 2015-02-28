@@ -1,4 +1,6 @@
-# TermStyle <!-- [![Build Status](https://travis-ci.org/rodw/stew.svg?branch=master)](https://travis-ci.org/rodw/stew) [![Dependencies](https://david-dm.org/rodw/stew.svg)](https://npmjs.org/package/stew) [![NPM version](https://badge.fury.io/js/stew.svg)](http://badge.fury.io/js/stew) -->
+# TermStyle
+
+<!-- [![Build Status](https://travis-ci.org/rodw/termstyle.svg?branch=master)](https://travis-ci.org/rodw/termstyle) [![Dependencies](https://david-dm.org/rodw/termstyle.svg)](https://npmjs.org/package/termstyle) [![NPM version](https://badge.fury.io/js/termstyle.svg)](http://badge.fury.io/js/termstyle) -->
 
 **[TermStyle](https://github.com/rodw/termstyle)** is a (server-side) JavaScript library that provides utility functions supporting styled console (terminal) output.
 
@@ -15,7 +17,6 @@ TermStyle supports:
 ## Using
 
 (This is an early release of TermStyle, the API may change slightly in future releases.)
-
 
 ### (example)
 
@@ -57,7 +58,7 @@ console.log(f.wrap("Imagine this is very long text that needs to be wrapped to f
 
 ## Installing
 
-The source code and documentation for Stew is available on GitHub at [rodw/termstyle](https://github.com/rodw/termstyle).  You can clone the repository via:
+The source code and documentation for TermStyle is available on GitHub at [rodw/termstyle](https://github.com/rodw/termstyle).  You can clone the repository via:
 
 ```console
 git clone git@github.com:rodw/termstyle.git
