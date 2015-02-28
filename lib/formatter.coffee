@@ -67,9 +67,11 @@ class Formatter
     @combine_multiple_space_chars = @theme.combine_multiple_space_chars ? DEFAULT_THEME.combine_multiple_space_chars ? true
     @tabs_as_spaces = @theme.tabs_as_spaces ? DEFAULT_THEME.tabs_as_spaces ? false
     @_add_styles(@theme.styles ? DEFAULT_THEME.styles)
-    process.stdout.on('resize',@_on_resize)
     @_add_chalk_functions()
     @_on_resize()
+
+  track_resize:()=>
+    process.stdout.on('resize',@_on_resize)
 
   # wrap long lines
   wrap:(text,options)=>
@@ -163,12 +165,29 @@ class Formatter
     else
       return str
 
-  # add `padding` characters to the left of `str`
-  truncate:(width,str)=>
+
+  # truncate (each line of) the given `text` to `width` characters
+  truncate:(width,text)=>
+    [width,text] = @_nsb(width,text)
+    buffer = []
+    lines = text.match /[\n\r\f\v]|([^\n\r\f\v]+)/mg
+    if lines?
+      for line in lines
+        if /^[\n\r\f\v]+$/.test line
+          buffer.push line
+        else
+          buffer.push @_truncate(width,line)
+    return buffer.join('')
+
+
+  # truncate the given `str` to `width` characters
+  _truncate:(width,str)=>
     [width,str] = @_nsb(width,str)
     len = chalk.stripColor(str).length
     if len > width
       el = chalk.stripColor(@ellipses).length
+      if el > width
+        throw new Error("Width cannot be less than length of ellipses")
       return str.substring(0,width-el)+@ellipses
     else
       return str
@@ -180,25 +199,6 @@ class Formatter
     for i in [0...n]
       buf += str
     return buf
-
-  # return the first number, string and boolean found in `args` as `[n,s,b]`
-  _nsb:(args...)=>
-    n = null
-    s = null
-    b = null
-    for arg in args
-      if typeof arg is 'number'
-        unless n?
-          n = arg
-      else if typeof arg is 'string'
-        unless s?
-          s = arg
-      else if typeof arg is 'boolean'
-        unless b?
-          b = arg
-      if n? and s? and b?
-        return [n,s,b]
-    return [n,s,b]
 
   # repeat the given string as many times as possible to fill `w` (partial lines if necessary)
   fill:(width,str)=>
@@ -316,6 +316,25 @@ class Formatter
       return  @ntimes(pre,' ') + str + @ntimes(post,' ')
     else
       return str
+
+  # return the first number, string and boolean found in `args` as `[n,s,b]`
+  _nsb:(args...)=>
+    n = null
+    s = null
+    b = null
+    for arg in args
+      if typeof arg is 'number'
+        unless n?
+          n = arg
+      else if typeof arg is 'string'
+        unless s?
+          s = arg
+      else if typeof arg is 'boolean'
+        unless b?
+          b = arg
+      if n? and s? and b?
+        return [n,s,b]
+    return [n,s,b]
 
   _add_styles:(sty=STYLES)=>
     msf = (style)=> (x)=>@_apply(style,x)
