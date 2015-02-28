@@ -64,16 +64,19 @@ class Formatter
     @pad_left = @theme.pad_left ? DEFAULT_THEME.pad_left ? 1
     @pad_right = @theme.pad_right ? DEFAULT_THEME.pad_right ? 1
     @ellipses = @theme.ellipses ? DEFAULT_THEME.ellipses ? "..."
-    @_add_styles(@theme.styles)
+    @combine_multiple_space_chars = @theme.combine_multiple_space_chars ? DEFAULT_THEME.combine_multiple_space_chars ? true
+    @tabs_as_spaces = @theme.tabs_as_spaces ? DEFAULT_THEME.tabs_as_spaces ? false
+    @_add_styles(@theme.styles ? DEFAULT_THEME.styles)
     process.stdout.on('resize',@_on_resize)
     @_add_chalk_functions()
     @_on_resize()
 
-  # wrap long lines to `options.width` characters
+  # wrap long lines
   wrap:(text,options)=>
     width = options?.width ? @_get_width() ? 80
-    tab_width = options?.tab_width ? @tab_width
-    indent = options?.indent ? @indent
+    tab_width = options?.tab_width ? @tab_width ? 4
+    tabs_as_spaces = options?.tabs_as_spaces ? @tabs_as_spaces ? false
+    indent = options?.indent ? @indent ? 0
     if typeof indent is 'number'
       indent = @ntimes(indent," ")
     indent_len = chalk.stripColor(indent).length
@@ -81,6 +84,15 @@ class Formatter
       indent_len = 8*tab_width
     if indent_len > width
       throw new Error("Indent length cannot be greater than width. Found indent \""+indent+"\" ("+ indent_len + "), width " + width + ".")
+    pad_left = options?.pad_left ? @pad_left ? 0
+    pad_left_str = @ntimes(pad_left,' ')
+    pad_right = options?.pad_left ? @pad_right ? 0
+    pad_right_str = @ntimes(pad_right,' ')
+    pad_len = pad_left + pad_right
+    if pad_len > width
+      throw new Error("Pad length cannot be greater than width. Found "+pad_len+" > "+width+".")
+    combine_multiple_space_chars = options?.combine_multiple_space_chars ? @combine_multiple_space_chars ? true
+    target_width = width - pad_len
     ##########
     buffer = []
     lines = text.match /[\n\r\f\v]+|[^\n\r\f\v]+/mg
@@ -96,15 +108,19 @@ class Formatter
           len = chalk.stripColor(word).length
           if /^\t+$/.test word
             len = len*tab_width
-          if (cur_line_len + len) > width
+          else if /^\s+$/.test word
+            if combine_multiple_space_chars
+              word = " "
+              len = 1
+          if (cur_line_len + len) > target_width
             if /\S/.test cur_line
               if indent_needed
                 buffer.push indent
                 indent_needed = false
-              buffer.push cur_line.trim()
+              buffer.push pad_left_str + cur_line.trim()
               buffer.push "\n"
-            if len > width
-              buffer.push word
+            if len > target_width
+              buffer.push pad_left_str + word
               buffer.push "\n"
               cur_line = ""
               cur_line_len = 0
@@ -115,89 +131,191 @@ class Formatter
             cur_line += word
             cur_line_len += len
         if cur_line_len > 0
-          buffer.push cur_line.trim()
+          buffer.push pad_left_str + cur_line.trim()
           cur_line = ""
           cur_line_line = 0
+    str = buffer.join('')
+    if tabs_as_spaces
+      str = str.replace(/\t/mg,@ntimes(tab_width,' '))
     return buffer.join('')
 
-  upper:(x)=>x.toUpperCase()
+  # convert the given string to upper case
+  upper:(str)=>str?.toUpperCase()
 
-  lower:(x)=>x.toLowerCase()
+  # convert the given string to lower case
+  lower:(str)=>str?.toLowerCase()
 
-  # padding the given string with padding characters on the left
-  lpad:(x,padding)=>
+  # add `padding` characters to the left of `str`
+  lpad:(padding,str)=>
+    [padding,str] = @_nsb(padding,str)
     padding = padding ? @pad_left
     if padding? and padding > 0
-      return @ntimes(padding,' ')+x
+      return @ntimes(padding,' ')+str
     else
-      return x
+      return str
 
-  # padding the given string with padding characters on the right
-  rpad:(x,padding)=>
+  # add `padding` characters to the right of `str`
+  rpad:(padding,str)=>
+    [padding,str] = @_nsb(padding,str)
     padding = padding ? @pad_right
     if padding? and padding > 0
-      return x + @ntimes(padding,' ')
+      return str + @ntimes(padding,' ')
     else
-      return x
+      return str
 
-  truncate:(w,x)=>
-    [w,x] = @_wx(w,x)
-    l = chalk.stripColor(x).length
-    if l > w
+  # add `padding` characters to the left of `str`
+  truncate:(width,str)=>
+    [width,str] = @_nsb(width,str)
+    len = chalk.stripColor(str).length
+    if len > width
       el = chalk.stripColor(@ellipses).length
-      str = x.substring(0,w-el)+@ellipses
+      return str.substring(0,width-el)+@ellipses
     else
-      return x
-
+      return str
 
   # repeat the given string n times
-  ntimes:(n,x)=>
+  ntimes:(n,str)=>
+    [n,str] = @_nsb(n,str)
     buf = ""
     for i in [0...n]
-      buf += x
+      buf += str
     return buf
+
+  # return the first number, string and boolean found in `args` as `[n,s,b]`
+  _nsb:(args...)=>
+    n = null
+    s = null
+    b = null
+    for arg in args
+      if typeof arg is 'number'
+        unless n?
+          n = arg
+      else if typeof arg is 'string'
+        unless s?
+          s = arg
+      else if typeof arg is 'boolean'
+        unless b?
+          b = arg
+      if n? and s? and b?
+        return [n,s,b]
+    return [n,s,b]
 
   # repeat the given string as many times as possible to fill `w` (partial lines if necessary)
-  fill:(w,x)=>
-    [w,x] = @_wx(w,x)
-    l = chalk.stripColor(x).length
-    n = Math.floor(w/l)
-    buf = @ntimes(n,x)
-    if (n*l) < w
-      buf += x.substring(0,w-(n*l)) # TODO should pay attention to color here
+  fill:(width,str)=>
+    [width,str] = @_nsb(width,str)
+    len = chalk.stripColor(str).length
+    n = Math.floor(width/len)
+    buf = @ntimes(n,str)
+    if (n*len) < width
+      buf += x.substring(0,width-(n*len)) # TODO should pay attention to color here
     return buf
+
+  # right align (each line of) the given `text` to lines `width` characters long.
+  right:(width,text,pad=false)=>
+    [width,text,pad] = @_nsb(width,text,pad)
+    if width is 0
+      return text
+    else if text is ''
+      return @ntimes(width,' ')
+    else
+      buffer = []
+      lines = text.match /[\n\r\f\v]|([^\n\r\f\v]+)/mg
+      last_was_newline = true
+      for line in lines
+        if /^[\n\r\f\v]+$/.test line
+          if last_was_newline
+            buffer.push (@_right(width,'',pad)+line)
+          else
+            buffer.push line
+            last_was_newline = true
+        else
+          buffer.push @_right(width,line,pad)
+          last_was_newline = false
+      return buffer.join('')
 
   # right align the given text to `w` characters
-  right:(w,x)=>
-    [w,x] = @_wx(w,x)
-    x = @rpad(x)
-    l = chalk.stripColor(x).length
+  _right:(width,str,pad=false)=>
+    [width,str,pad] = @_nsb(width,str,pad)
+    unless width?
+      width = @_get_width()
+    if pad
+      str = @rpad(str)
+    len = chalk.stripColor(str).length
     buf = ""
-    if l < w
-      buf += @ntimes(w-l,' ')
-    buf += x
+    if len < width
+      buf += @ntimes(width-len,' ')
+    buf += str
     return buf
 
-  # left align the given text to `w` characters (with padding)
-  left:(w,x)=>
-    [w,x] = @_wx(w,x)
-    x = @lpad(x)
-    l = chalk.stripColor(x).length
-    buf = x
-    if l < w
-      buf += @ntimes(w-l,' ')
-    return buf
-
-  # center align the given text to `w` characters (with padding)
-  center:(w,x)=>
-    [w,x] = @_wx(w,x)
-    l = chalk.stripColor(x).length
-    if l < w
-      pre = Math.floor((w-l)/2)
-      post = w-l-pre
-      return  @ntimes(pre,' ') + x + @ntimes(post,' ')
+  left:(width,text,pad=false)=>
+    [width,text,pad] = @_nsb(width,text,pad)
+    if width is 0
+      return text
+    else if text is ''
+      return @ntimes(width,' ')
     else
-      return x
+      buffer = []
+      lines = text.match /[\n\r\f\v]|([^\n\r\f\v]+)/mg
+      last_was_newline = true
+      for line in lines
+        if /^[\n\r\f\v]+$/.test line
+          if last_was_newline
+            buffer.push (@_right(width,'',pad)+line)
+          else
+            buffer.push line
+            last_was_newline = true
+        else
+          buffer.push @_left(width,line,pad)
+          last_was_newline = false
+      return buffer.join('')
+
+  # left align the given `str` to `width` characters
+  _left:(width,str,pad=false)=>
+    [width,str,pad] = @_nsb(width,str,pad)
+    unless width?
+      width = @_get_width()
+    if pad
+      str = @lpad(str)
+    len = chalk.stripColor(str).length
+    buf = str
+    if len < width
+      buf += @ntimes(width-len,' ')
+    return buf
+
+  center:(width,text)=>
+    [width,text] = @_nsb(width,text)
+    if width is 0
+      return text
+    else if text is ''
+      return @ntimes(width,' ')
+    else
+      buffer = []
+      lines = text.match /[\n\r\f\v]|[^\n\r\f\v]+/mg
+      last_was_newline = true
+      for line in lines
+        if /^[\n\r\f\v]+$/.test line
+          if last_was_newline
+            buffer.push @_right(width,'',false)+line
+          else
+            buffer.push line
+            last_was_newline = true
+        else
+          buffer.push @_center(width,line)
+          last_was_newline = false
+      return buffer.join('')
+
+  # center align the given `str` to `width` characters
+  _center:(width,str)=>
+    [width,str] = @_nsb(width,str)
+    unless width?
+      width = @_get_width()
+    len = chalk.stripColor(str).length
+    if len < width
+      pre = Math.floor((width-len)/2)
+      post = width-(len+pre)
+      return  @ntimes(pre,' ') + str + @ntimes(post,' ')
+    else
+      return str
 
   _add_styles:(sty=STYLES)=>
     msf = (style)=> (x)=>@_apply(style,x)
@@ -223,45 +341,50 @@ class Formatter
     @current_width = process.stdout.columns
     @current_height = process.stdout.rows
 
-  _wx:(w,x)=>
-    if not x? and typeof w is 'string'
-      x = w
-      w = null
-    w = @_get_width(w)
-    return [w,x]
+  # _wx:(w,x)=>
+  #   if not x? and typeof w is 'string'
+  #     x = w
+  #     w = null
+  #   w = @_get_width(w)
+  #   return [w,x]
 
 f = new Formatter()
 
-# text = "When using the RegExp constructor: for each backslash in your regular expression, you have to type \\ in the RegExp constructor. (In JavaScript strings, \\ represents a single backslash!) For example, the following regular expressions match all leading and trailing whitespaces (\s); note that \\s is passed as part of the first argument of the RegExp constructor"
-text = """
-To scan the lines of his face, or feel the bumps on the head of this Leviathan; this is a thing which no Physiognomist or Phrenologist has as yet undertaken. Such an enterprise would seem almost as hopeful as for Lavater to have scrutinized the wrinkles on the Rock of Gibraltar, or for Gall to have mounted a ladder and manipulated the Dome of the Pantheon. Still, in that famous work of his, Lavater not only treats of the various faces of men, but also attentively studies the faces of horses, birds, serpents, and fish; and dwells in detail upon the modifications of expression discernible therein. Nor have Gall and his disciple Spurzheim failed to throw out some hints touching the phrenological characteristics of other beings than man. Therefore, though I am but ill qualified for a pioneer, in the application of these two semi-sciences to the whale, I will do my endeavor. I try all things; I achieve what I can.
+exports.Formatter = Formatter
 
-Physiognomically regarded, the Sperm Whale is an anomalous creature. He has no proper nose. And since the nose is the central and most conspicuous of the features; and since it perhaps most modifies and finally controls their combined expression; hence it would seem that its entire absence, as an external appendage, must very largely affect the countenance of the whale. For as in landscape gardening, a spire, cupola, monument, or tower of some sort, is deemed almost indispensable to the completion of the scene; so no face can be physiognomically in keeping without the elevated open-work belfry of the nose. Dash the nose from Phidias's marble Jove, and what a sorry remainder! Nevertheless, Leviathan is of so mighty a magnitude, all his proportions are so stately, that the same deficiency which in the sculptured Jove were hideous, in him is no blemish at all. Nay, it is an added grandeur. A nose to the whale would have been impertinent. As on your physiognomical voyage you sail round his vast head in your jolly-boat, your noble conceptions of him are never insulted by the reflection that he has a nose to be pulled. A pestilent conceit, which so often will insist upon obtruding even when beholding the mightiest royal beadle on his throne.
+# # text = "When using the RegExp constructor: for each backslash in your regular expression, you have to type \\ in the RegExp constructor. (In JavaScript strings, \\ represents a single backslash!) For example, the following regular expressions match all leading and trailing whitespaces (\s); note that \\s is passed as part of the first argument of the RegExp constructor"
+# text = """
+# To scan the lines of his face, or feel the bumps on the head of this Leviathan; this is a thing which no Physiognomist or Phrenologist has as yet undertaken. Such an enterprise would seem almost as hopeful as for Lavater to have scrutinized the wrinkles on the Rock of Gibraltar, or for Gall to have mounted a ladder and manipulated the Dome of the Pantheon. Still, in that famous work of his, Lavater not only treats of the various faces of men, but also attentively studies the faces of horses, birds, serpents, and fish; and dwells in detail upon the modifications of expression discernible therein. Nor have Gall and his disciple Spurzheim failed to throw out some hints touching the phrenological characteristics of other beings than man. Therefore, though I am but ill qualified for a pioneer, in the application of these two semi-sciences to the whale, I will do my endeavor. I try all things; I achieve what I can.
 
-In some particulars, perhaps the most imposing physiognomical view to be had of the Sperm Whale, is that of the full front of his head. This aspect is sublime.
-"""
+# Physiognomically regarded, the Sperm Whale is an anomalous creature. He has no proper nose. And since the nose is the central and most conspicuous of the features; and since it perhaps most modifies and finally controls their combined expression; hence it would seem that its entire absence, as an external appendage, must very largely affect the countenance of the whale. For as in landscape gardening, a spire, cupola, monument, or tower of some sort, is deemed almost indispensable to the completion of the scene; so no face can be physiognomically in keeping without the elevated open-work belfry of the nose. Dash the nose from Phidias's marble Jove, and what a sorry remainder! Nevertheless, Leviathan is of so mighty a magnitude, all his proportions are so stately, that the same deficiency which in the sculptured Jove were hideous, in him is no blemish at all. Nay, it is an added grandeur. A nose to the whale would have been impertinent. As on your physiognomical voyage you sail round his vast head in your jolly-boat, your noble conceptions of him are never insulted by the reflection that he has a nose to be pulled. A pestilent conceit, which so often will insist upon obtruding even when beholding the mightiest royal beadle on his throne.
 
-console.log(f.warning("Lorem Ipsum"))
-console.log(f.hr('='))
-console.log f.wrap(text)
-console.log(f.HR())
-console.log f.truncate(text)
-console.log(f.HR())
-console.log(f.ts("Time stamped"))
-console.log(f.center("Center"))
-console.log(f.hr('='))
-console.log "BANNER"
-console.log(f.BANNER(text))
-console.log(f.BANNER("Lorem Ipsum"))
-console.log "banner"
-console.log(f.banner("Lorem Ipsum"))
-console.log(f.hr('.'))
-console.log "TITLE"
-console.log(f.TITLE("Lorem Ipsum"))
-console.log "title"
-console.log(f.title("Lorem Ipsum"))
-console.log(f.hr('.'))
-console.log(f.hr('.'))
-console.log(f.error("Lorem Ipsum"))
-console.log(f.hr('~'))
-console.log(f.note("Lorem Ipsum"))
+# In some particulars, perhaps the most imposing physiognomical view to be had of the Sperm Whale, is that of the full front of his head. This aspect is sublime.
+# """
+
+# console.log(f.warning("Lorem Ipsum"))
+# console.log(f.hr('='))
+# console.log f.underline(f.left(null,f.wrap(text),false))
+# console.log(f.hr('='))
+# console.log f.underline((f.wrap(text)))
+# console.log(f.HR())
+# console.log f.truncate(text)
+# console.log(f.HR())
+# console.log(f.ts("Time stamped"))
+# console.log(f.center(null,"Center",true))
+# console.log(f.right(null,"Right",true))
+# console.log(f.bgRed(f.left("Left",true)))
+# console.log "BANNER"
+# console.log(f.BANNER(text))
+# console.log(f.BANNER("Lorem Ipsum"))
+# console.log "banner"
+# console.log(f.banner("Lorem Ipsum"))
+# console.log(f.hr('.'))
+# console.log "TITLE"
+# console.log(f.TITLE("Lorem Ipsum"))
+# console.log "title"
+# console.log(f.title("Lorem Ipsum"))
+# console.log(f.hr('.'))
+# console.log(f.hr('.'))
+# console.log(f.error("Lorem Ipsum"))
+# console.log(f.hr('~'))
+# console.log(f.note("Lorem Ipsum"))
