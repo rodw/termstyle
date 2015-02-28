@@ -24,7 +24,7 @@ TermStyle supports:
 # generates a function that applies the given
 # prefix to an input string (used below in
 # the theme defintion
-make_prefix_function = (p)->
+make_prefix_fn = (p)->
   return ((x)->"#{p}#{x}")
 
 # define a custom theme and a few styles
@@ -34,9 +34,9 @@ theme = {
   styles: {
     banner:  ["inverse","bold","blue","center","stripColor","truncate"]
     BANNER:  ["banner","upper"]
-    error:   ["red",   mpf(chalk.inverse.bold("[ERROR]")+" ")]
-    warning: ["yellow",mpf(chalk.inverse.bold("[WARNING]")+" ")]
-    note:    ["blue",  mpf(chalk.inverse.bold("[NOTE]")+" ")]
+    error:   ["red",   make_prefix_fn(chalk.inverse.bold("[ERROR]")+" ")]
+    warning: ["yellow",make_prefix_fn(chalk.inverse.bold("[WARNING]")+" ")]
+    note:    ["blue",  make_prefix_fn(chalk.inverse.bold("[NOTE]")+" ")]
   }
 }
 
