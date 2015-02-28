@@ -185,3 +185,17 @@ describe "Formatter",->
     for test in tests
       f.truncate(test[0]...).should.equal test[1]
     done()
+
+  it "can fill lines",(done)->
+    f = new Formatter(fixed_width:40)
+    tests = [
+      [ [5,' '],"     " ]
+      [ [5],"     " ]
+      [ [5,'.'],"....." ]
+      [ [5,'.='],".=.=." ]
+      [ [6,'.='],".=.=.=" ]
+      [ [3,'12345'],"123" ]
+    ]
+    for test in tests
+      f.fill(test[0]...).should.equal test[1]
+    done()

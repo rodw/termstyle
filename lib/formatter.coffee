@@ -203,11 +203,13 @@ class Formatter
   # repeat the given string as many times as possible to fill `w` (partial lines if necessary)
   fill:(width,str)=>
     [width,str] = @_nsb(width,str)
+    unless str?
+      str = ' '
     len = chalk.stripColor(str).length
     n = Math.floor(width/len)
     buf = @ntimes(n,str)
     if (n*len) < width
-      buf += x.substring(0,width-(n*len)) # TODO should pay attention to color here
+      buf += str.substring(0,width-(n*len)) # TODO should pay attention to color here
     return buf
 
   # right align (each line of) the given `text` to lines `width` characters long.
