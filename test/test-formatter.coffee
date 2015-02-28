@@ -214,6 +214,7 @@ describe "Formatter",->
       styles:
         foo: ["red","upper"]
         bar: ["green","lower"]
+    }
     f = new Formatter(theme)
     f.foo("Lorem Ipsum").should.equal(chalk.red("LOREM IPSUM"))
     f.bar("Lorem Ipsum").should.equal(chalk.green("lorem ipsum"))
