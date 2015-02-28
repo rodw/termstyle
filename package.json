@@ -1,0 +1,15 @@
+{
+  "name"         : "termstyle",
+  "version"      : "0.0.1",
+  "description"  : "...tk...",
+  "author"       : "Rod Waldhoff <http://heyrod.com/>",
+  "Contributors" : [ ],
+  "dependencies": {
+    "chalk"     : "latest"
+  },
+  "devDependencies": {
+    "coffee-script"     : "latest",
+    "mocha"             : "latest",
+    "should"            : "latest"
+  }
+}
