@@ -1,6 +1,6 @@
 # TermStyle [![Dependencies](https://david-dm.org/rodw/termstyle.svg)](https://npmjs.org/package/termstyle) [![NPM version](https://badge.fury.io/js/termstyle.svg)](http://badge.fury.io/js/termstyle)
 
-<!-- [![Build Status](https://travis-ci.org/rodw/termstyle.svg?branch=master)](https://travis-ci.org/rodw/termstyle) -->  -->
+<!-- [![Build Status](https://travis-ci.org/rodw/termstyle.svg?branch=master)](https://travis-ci.org/rodw/termstyle) -->
 
 **[TermStyle](https://github.com/rodw/termstyle)** is a (server-side) JavaScript library that provides utility functions supporting styled console (terminal) output.
 
