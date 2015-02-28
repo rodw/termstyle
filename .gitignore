@@ -3,6 +3,7 @@ docco
 hold
 lib-cov
 node_modules
+module
 *.html
 *.js
 *.log
@@ -10,6 +11,7 @@ node_modules
 *.pid
 delete-me
 tmp
+termstyle-*
 ######################################################################
 $RECYCLE.BIN/
 *.*~
