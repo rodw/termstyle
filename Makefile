@@ -32,14 +32,14 @@ MOCHA_TIMEOUT ?=-t 3000
 MOCHA_TEST_ARGS  ?= -R list --compilers coffee:coffee-script/register $(MOCHA_TIMEOUT) $(MOCHA_TEST_PATTERN)
 MOCHA_EXTRA_ARGS ?=
 
-# JSCOVERAGE ###################################################################
-JSCOVERAGE_EXE ?= node-jscoverage
-JSCOVERAGE_REPORT ?= docs/coverage.html
-JSCOVERAGE_TMP_DIR ?=  ./jscov-tmp
-LIB_COV ?= lib-cov
+# COVERAGE #####################################################################
 LIB ?= lib
-MOCHA_COV_ARGS  ?= -R html-cov --compilers coffee:coffee-script/register -t 6000 --globals "_\$$jscoverage"
-
+LIB_COV ?= lib-cov
+COVERAGE_REPORT ?= docs/coverage.html
+COVERAGE_TMP_DIR ?=  ./cov-tmp
+COVERAGE_EXE ?= ./node_modules/.bin/coffeeCoverage
+COVERAGE_ARGS ?= -e migration --initfile $(LIB_COV)/coffee-coverage-init.js
+MOCHA_COV_ARGS  ?= --require $(LIB_COV)/coffee-coverage-init.js --globals "_\$$jscoverage" --compilers coffee:coffee-script/register -R html-cov -t 20000
 
 # MARKDOWN #####################################################################
 MARKDOWN_SRCS ?= $(shell find . -type f -name '*.md' | grep -v node_modules)
@@ -157,16 +157,16 @@ test: $(MOCHA_TESTS)
 test-watch: js $(MOCHA_TESTS)
 	$(MOCHA_EXE) --watch $(MOCHA_TEST_ARGS) ${MOCHA_EXTRA_ARGS} $(MOCHA_TESTS)
 
-coverage: js
-	rm -r $(RM_DASH_I) $(JSCOVERAGE_TMP_DIR)
-	rm -r $(RM_DASH_I) $(LIB_COV)
-	mkdir -p $(JSCOVERAGE_TMP_DIR)
-	cp $(LIB)/*.js $(JSCOVERAGE_TMP_DIR)/.
-	$(JSCOVERAGE_EXE) -v $(JSCOVERAGE_TMP_DIR) $(LIB_COV)
-	mkdir -p `dirname $(JSCOVERAGE_REPORT)`
-	$(MOCHA_EXE) $(MOCHA_COV_ARGS) $(MOCHA_TESTS) > $(JSCOVERAGE_REPORT)
-	rm -r $(RM_DASH_I) $(JSCOVERAGE_TMP_DIR)
-	rm -r $(RM_DASH_I) $(LIB_COV)
+coverage: $(COFFEE_SRCS) $(COFFEE_TEST_SRCS) $(MOCHA_TESTS) $(NODE_MODULES)
+	rm -rf $(COVERAGE_TMP_DIR)
+	rm -rf $(LIB_COV)
+	mkdir -p $(COVERAGE_TMP_DIR)
+	cp -r $(LIB)/* $(COVERAGE_TMP_DIR)/.
+	$(COVERAGE_EXE) $(COVERAGE_ARGS) $(COVERAGE_TMP_DIR) $(LIB_COV)
+	mkdir -p `dirname $(COVERAGE_REPORT)`
+	$(MOCHA_EXE) $(MOCHA_COV_ARGS) $(MOCHA_TESTS) > $(COVERAGE_REPORT)
+	rm -rf $(COVERAGE_TMP_DIR)
+	rm -rf $(LIB_COV)
 
 ################################################################################
 # MARKDOWN & OTHER DOC TARGETS
