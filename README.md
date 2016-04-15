@@ -4,6 +4,10 @@
 
 **[TermStyle](https://github.com/rodw/termstyle)** is a (server-side) JavaScript library that provides utility functions supporting styled console (terminal) output.
 
+Using TermStyle you can achieve effects like the following (which was directly generated from the sample code shown below).
+
+![](https://raw.githubusercontent.com/rodw/termstyle/screenshot.png)
+
 TermStyle supports:
 
 1. ANSI-text-color formatting (building on top of [chalk](https://github.com/sindresorhus/chalk))
@@ -12,7 +16,7 @@ TermStyle supports:
 
 3. Wrapping and truncating text to a predefined and/or the current console width.
 
-4. The declarative defintion of theme-able style "classes".
+4. The declarative definition of theme-able style "classes".
 
 ## Using
 
@@ -21,38 +25,85 @@ TermStyle supports:
 ### (example)
 
 ```coffeescript
-# generates a function that applies the given
-# prefix to an input string (used below in
-# the theme defintion
-make_prefix_fn = (p)->
-  return ((x)->"#{p}#{x}")
+# 'Formatter' is the primary utility used in termstyle.
+Formatter = require('./lib/formatter').Formatter
+f = new Formatter()
 
-# define a custom theme and a few styles
+console.log "\n"
+
+# You can apply styles to any string:
+console.log(f.TITLE("Welcome to TermStyle."))
+
+# But since this is CoffeeScript, we can skip the parens to make it a little cleaner:
+console.log f.magenta "Easy-peasey colors."
+
+# There are a lot of different styles available:
+console.log f.center "Centered text."
+console.log f.underline "Underlined text."
+console.log f.right "Right-aligned."
+console.log f.italic "Italic text."
+console.log f.black f.bgYellow "Background and foreground."
+console.log f.error "Reporting an error."
+# You can also combine styles:
+console.log f.error "Reporting an error " + f.italic "that contains italic text."
+# And as we'll see below, you can add your own.
+
+console.log "\n"
+
+# You can define a custom theme that over overrides a few configuration parameters.
 theme = {
+  max_width:45
+  ellipses:"..."
   tab_width: 4
   tabs_as_spaces:true
-  styles: {
-    banner:  ["inverse","bold","blue","center","stripColor","truncate"]
-    BANNER:  ["banner","upper"]
-    error:   ["red",   make_prefix_fn(chalk.inverse.bold("[ERROR]")+" ")]
-    warning: ["yellow",make_prefix_fn(chalk.inverse.bold("[WARNING]")+" ")]
-    note:    ["blue",  make_prefix_fn(chalk.inverse.bold("[NOTE]")+" ")]
-  }
 }
-
-# create the formatter
 f = new Formatter(theme)
+console.log f.title "Now my title is narrower."
 
-# use it
-console.log(f.BANNER("Big Bold Banner"))
+console.log f.wrap "\n...which is a good chance to show off the automatic wrapping function.  When we have long text like this we can automatically wrap it to the size of the terminal.\n" +
+                    "\nLorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n" +
+                    "\nMulti-line text is OK.  Each line will be wrapped independently."
 
-console.log(f.error("Oops, an error occurred"))
+# You can also define "declarative" styles that will
+# add simple functions to your Formatter that you can
+# use to apply the style.
+theme = {}
+theme.styles = {}
 
-console.log(f.warning("This is a warning"))
+# Styles are defined declaratively, for instance, here
+# a style that will create a "banner" (as seen in the
+# screenshot)
+theme.styles.banner = ["inverse","bold","red","center","stripColor","truncate"]
 
-console.log(f.note("This is just a note"))
+# You can use one declarative style in the definition of another:
+theme.styles.BANNER = ["banner","upper"]
 
-console.log(f.wrap("Imagine this is very long text that needs to be wrapped to fit on-screen.\nMulti-line text is OK.  Each line will be wrapped independently."))
+# Your style parameters can also be functions that transform the
+# input text in any way that you want.
+
+# For example this function will prefix the word `ERROR` in
+# bold letters before any input string:
+prefix_error = (str)=>f.bold("[ERROR] ") + str
+# Here's a couple more:
+prefix_warning = (str)=>f.bold("[WARNING] ") + str
+prefix_note = (str)=>f.bold("[NOTE] ") + str
+
+# Let's use those functions to create some new styles:
+theme.styles.error      = [ "red", prefix_error ]
+theme.styles.warning    = [ "yellow", prefix_warning ]
+theme.styles.note       = [ "blue", prefix_note ]
+theme.styles.right_note = [ "right", "blue", prefix_note ]
+
+# Now let's try those new styles:
+
+f = new Formatter(theme)
+console.log f.BANNER "Big Red Banner"
+console.log f.warning "This is a warning"
+console.log f.error "Oops, an error occurred"
+console.log f.note "This is just a note"
+console.log f.right_note "A note on the right."
+
+console.log "\n"
 ```
 
 
