@@ -6,7 +6,7 @@
 
 Using TermStyle you can achieve effects like the following (which was directly generated from the sample code shown below).
 
-![](https://raw.githubusercontent.com/rodw/termstyle/screenshot.png)
+![](https://raw.githubusercontent.com/rodw/termstyle/master/screenshot.png)
 
 TermStyle supports:
 
