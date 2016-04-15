@@ -182,6 +182,7 @@ class Formatter
 
   # truncate the given `str` to `width` characters
   _truncate:(width,str)=>
+    width ?= @_get_width() ? 80
     [width,str] = @_nsb(width,str)
     len = chalk.stripColor(str).length
     if len > width
