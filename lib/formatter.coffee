@@ -98,7 +98,10 @@ class Formatter
     ##########
     buffer = []
     lines = text.match /[\n\r\f\v]+|[^\n\r\f\v]+/mg
+    last_line_was_explict_newline = false
     for line,i in lines
+      # console.log "LINE: `#{line}`"
+      last_line_was_explict_newline = true
       if /^[\n\r\f\v]+$/mg.test line
         buffer.push line
       else
@@ -107,6 +110,7 @@ class Formatter
         cur_line_len = indent_len
         words = line.match /\t+|\s+|[^\s]+/mg
         for word in words
+          # console.log "WORD: `#{word}`"
           len = chalk.stripColor(word).length
           if /^\t+$/.test word
             len = len*tab_width
@@ -119,11 +123,16 @@ class Formatter
               if indent_needed
                 buffer.push indent
                 indent_needed = false
-              buffer.push pad_left_str + cur_line.trim()
+              if last_line_was_explict_newline
+                buffer.push pad_left_str + @_rtrim(cur_line)
+              else
+                buffer.push pad_left_str + cur_line.trim()
               buffer.push "\n"
+              last_line_was_explict_newline = false
             if len > target_width
               buffer.push pad_left_str + word
               buffer.push "\n"
+              last_line_was_explict_newline = false
               cur_line = ""
               cur_line_len = 0
             else
@@ -133,9 +142,13 @@ class Formatter
             cur_line += word
             cur_line_len += len
         if cur_line_len > 0
-          buffer.push pad_left_str + cur_line.trim()
+          if last_line_was_explict_newline
+            buffer.push pad_left_str + @_rtrim(cur_line)
+          else
+            buffer.push pad_left_str + cur_line.trim()
+            last_line_was_explict_newline = false
           cur_line = ""
-          cur_line_line = 0
+          cur_line_len = 0
     str = buffer.join('')
     if tabs_as_spaces
       str = str.replace(/\t/mg,@ntimes(tab_width,' '))
@@ -165,6 +178,13 @@ class Formatter
     else
       return str
 
+  _rtrim:(str)=>
+    match = str.match /^(\S.*)\s$/
+    if match?[1]?
+      return match[1]
+
+    else
+      return str
 
   # truncate (each line of) the given `text` to `width` characters
   truncate:(width,text)=>

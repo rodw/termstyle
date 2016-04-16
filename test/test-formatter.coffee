@@ -209,6 +209,15 @@ describe "Formatter",->
       f.wrap(test[0]...).should.equal test[1]
     done()
 
+  it "preserves leading whitespace when wrapping",(done)->
+    f = new Formatter()
+    tests = [
+      [ [INDENTED_TEXT,{width:60,pad_left:0,combine_multiple_space_chars:false}],INDENTED_TEXT ]
+    ]
+    for test in tests
+      f.wrap(test[0]...).should.equal test[1]
+    done()
+
   it "can apply styles",(done)->
     theme = {
       styles:
@@ -219,6 +228,12 @@ describe "Formatter",->
     f.foo("Lorem Ipsum").should.equal(chalk.red("LOREM IPSUM"))
     f.bar("Lorem Ipsum").should.equal(chalk.green("lorem ipsum"))
     done()
+
+INDENTED_TEXT = """
+Line One
+  Line Two
+    Line Three
+"""
 
 
 MOBY_DICK = """
